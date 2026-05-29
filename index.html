@@ -4,50 +4,29 @@
 <head>
   <meta charset="UTF-8">
   <title>善八VIPクーポン</title>
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
+
     body{
+      margin:0;
       font-family:sans-serif;
-      text-align:center;
-      padding:40px;
       background:#faf7f2;
-      color:#333;
     }
 
-    .card{
-      background:white;
-      border-radius:16px;
-      padding:30px;
-      max-width:500px;
-      margin:auto;
-      box-shadow:0 4px 20px rgba(0,0,0,0.08);
+    iframe{
+      border:none;
+      width:100%;
+      height:100vh;
     }
 
-    h1{
-      margin-bottom:20px;
-    }
-
-    .coupon{
-      font-size:28px;
-      font-weight:bold;
-      margin-top:20px;
-      color:#c0392b;
-    }
-
-    .loading{
-      font-size:20px;
-    }
   </style>
 </head>
 
 <body>
 
-<div class="card" id="app">
-  <div class="loading">
-    読み込み中...
-  </div>
-</div>
+<iframe id="frame"></iframe>
 
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
@@ -57,82 +36,36 @@ async function main(){
 
   try{
 
-    // LIFF初期化
     await liff.init({
-      liffId: "2010165360-1V2UTGoZ"
+      liffId:"2010165360-1V2UTGoZ"
     });
 
-    // LINEログイン
     if(!liff.isLoggedIn()){
+
       liff.login();
       return;
     }
 
-    // LINEプロフィール取得
     const profile = await liff.getProfile();
 
-    // GAS URL
-    const gasUrl =
-      "https://script.google.com/macros/s/AKfycbzP1Sspp5k_OaiDhArSSspX353trDa-8MzT2ulZDkte42XJ5gLzXNYK-5eg1K2pXI_w8Q/exec"
+    const url =
+      "https://script.google.com/macros/s/AKfycbxjovHbvOES9ruBssUPQWk_uglEx1YItpKUI0AxqlytcWoImXXcJrTiZ6ktrN5dS7K8Zw/exec"
       + "?userId=" + encodeURIComponent(profile.userId)
       + "&name=" + encodeURIComponent(profile.displayName);
 
-    // GASへアクセス
-    const response = await fetch(gasUrl);
-
-    // JSON取得
-    const data = await response.json();
-
-    console.log(data);
-
-    // エラー
-    if(data.status === "error"){
-
-      document.getElementById("app").innerHTML = `
-        <h1>エラー</h1>
-        <p>${data.message}</p>
-      `;
-
-      return;
-    }
-
-    // VIP
-    if(data.status === "VIP"){
-
-      document.getElementById("app").innerHTML = `
-        <h1>VIPクーポン</h1>
-
-        <p>
-          ${data.name}様
-        </p>
-
-        <div class="coupon">
-          ${data.coupon}
-        </div>
-      `;
-
-      return;
-    }
-
-    // pending
-    document.getElementById("app").innerHTML = `
-      <h1>申請中</h1>
-
-      <p>
-        VIP承認後にクーポンをご利用いただけます。
-      </p>
-    `;
+    document.getElementById("frame").src = url;
 
   }catch(err){
 
-    console.error(err);
-
-    document.getElementById("app").innerHTML = `
-      <h1>通信エラー</h1>
-
-      <p>
+    document.body.innerHTML = `
+      <div style="
+        padding:40px;
+        text-align:center;
+        font-size:20px;
+      ">
+        通信エラー<br><br>
         ${err}
-      </p>
+      </div>
     `;
   }
 }
