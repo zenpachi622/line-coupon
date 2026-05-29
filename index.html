@@ -1,145 +1,56 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>善八VIP</title>
-
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-
-  <style>
-
-    body{
-      margin:0;
-      padding:0;
-      background:#f5f5f5;
-      font-family:sans-serif;
-    }
-
-    .container{
-      max-width:420px;
-      margin:auto;
-      padding:24px;
-    }
-
-    .card{
-      background:white;
-      border-radius:20px;
-      padding:24px;
-      margin-top:40px;
-      box-shadow:0 4px 12px rgba(0,0,0,0.08);
-      text-align:center;
-    }
-
-    h1{
-      margin-top:0;
-    }
-
-    .coupon{
-      margin-top:20px;
-      padding:20px;
-      border:2px solid #111;
-      border-radius:12px;
-    }
-
-    .loading{
-      color:#777;
-    }
-
-  </style>
-
+  <meta charset="utf-8">
+  <title>VIPクーポン</title>
 </head>
-
 <body>
 
-<div class="container">
+<h1>読み込み中...</h1>
 
-  <div class="card">
-
-    <h1>善八VIP</h1>
-
-    <div id="result" class="loading">
-      読み込み中...
-    </div>
-
-  </div>
-
-</div>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
 <script>
 
 async function main(){
 
-  try{
+  // LIFF初期化
+  await liff.init({
+    liffId: "2010165360-1V2UTGoZ"
+  });
 
-    // LIFF初期化
-    await liff.init({
-      liffId: "2010165360-1V2UTGoZ"
-    });
+  // ログイン確認
+  if(!liff.isLoggedIn()){
+    liff.login();
+    return;
+  }
 
-    // LINEログイン
-    if(!liff.isLoggedIn()){
-      liff.login();
-      return;
-    }
+  // LINEプロフィール取得
+  const profile = await liff.getProfile();
 
-    // LINEプロフィール取得
-    const profile = await liff.getProfile();
+  // GASから情報取得
+  const response = await fetch(
+    "https://script.google.com/macros/s/AKfycbztrHzm629d7qsOwOgw8-0higHPpQ6fr3Jwaya5mV7e_EAU79ZNu16JhOHVvdNoOTeokg/exec?userId=" + profile.userId
+  );
 
-    const userId = profile.userId;
+  const data = await response.json();
 
-    // GASへ送信
-    const response = await fetch(
-      "https://script.google.com/macros/s/AKfycbztrHzm629d7qsOwOgw8-0higHPpQ6fr3Jwaya5mV7e_EAU79ZNu16JhOHVvdNoOTeokg/exec",
-      {
-        method:"POST",
-   　　　mode: "no-cors",
-        redirect: "follow",
-        headers:{
-          "Content-Type":"application/json"
-        },
-        body:JSON.stringify({
-          userId:userId,
-          name:profile.displayName
-        })
-      }
-    );
+  console.log(data);
 
-    
-    console.log(data);
+  // VIP判定
+  if(data.status === "VIP"){
 
-    // VIP判定
-    if(data.status === "VIP"){
-
-      document.getElementById("result").innerHTML = `
-        <h2>${data.name} 様</h2>
-
-        <div class="coupon">
-          <h3>VIP限定クーポン</h3>
-          <p>${data.coupon}</p>
-        </div>
-      `;
-
-    }else{
-
-      document.getElementById("result").innerHTML = `
-        <h2>VIP登録ありがとうございます</h2>
-
-        <p>
-          承認後、限定クーポンが表示されます。
-        </p>
-      `;
-    }
-
-  }catch(error){
-
-    document.getElementById("result").innerHTML = `
-      エラーが発生しました<br><br>
-      ${error}
+    document.body.innerHTML = `
+      <h1>VIPクーポン</h1>
+      <p>${data.name}様</p>
+      <h2>${data.coupon}</h2>
     `;
 
-    console.log(error);
+  } else {
 
+    document.body.innerHTML = `
+      <h1>審査中です</h1>
+    `;
   }
 
 }
